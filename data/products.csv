@@ -1,0 +1,41 @@
+product_id,product_name,category,unit_cost,unit_price
+1,Wireless Earbuds,Electronics,45,99
+2,Bluetooth Speaker,Electronics,38,79
+3,Phone Charger,Electronics,6,25
+4,Smart Watch,Electronics,120,249
+5,Laptop Stand,Electronics,18,49
+6,USB-C Hub,Electronics,22,59
+7,Webcam HD,Electronics,30,69
+8,Power Bank,Electronics,15,45
+9,Scented Candle,Home,4,19
+10,Throw Blanket,Home,20,59
+11,Ceramic Vase,Home,9,35
+12,Desk Lamp,Home,16,45
+13,Cushion Cover,Home,5,22
+14,Wall Clock,Home,12,39
+15,Photo Frame,Home,3,15
+16,Storage Basket,Home,8,29
+17,Coffee Grinder,Kitchen,28,79
+18,Chef Knife,Kitchen,25,89
+19,Cutting Board,Kitchen,7,29
+20,Water Bottle,Kitchen,6,29
+21,French Press,Kitchen,14,45
+22,Mixing Bowls,Kitchen,10,35
+23,Tea Infuser,Kitchen,2,12
+24,Cast Iron Pan,Kitchen,30,99
+25,Picnic Rug,Outdoor,12,45
+26,Camping Chair,Outdoor,22,69
+27,Insulated Cooler,Outdoor,35,119
+28,Beach Towel,Outdoor,8,32
+29,Hiking Backpack,Outdoor,40,129
+30,Head Torch,Outdoor,9,35
+31,Sun Umbrella,Outdoor,18,59
+32,Drink Flask,Outdoor,7,29
+33,Notebook A5,Stationery,2,12
+34,Fountain Pen,Stationery,15,49
+35,Desk Planner,Stationery,6,25
+36,Highlighter Set,Stationery,2,9
+37,Leather Folio,Stationery,20,69
+38,Sticky Notes,Stationery,1,6
+39,Pencil Case,Stationery,4,18
+40,Gel Pen Pack,Stationery,3,14
