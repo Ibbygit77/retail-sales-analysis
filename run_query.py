@@ -37,9 +37,13 @@ def main():
         print(">>> " + code.splitlines()[0] + (" ..." if "\n" in code else ""))
         try:
             cur = conn.execute(code)
-            print_table(cur, cur.fetchmany(50))
+            if cur.description is None:      # e.g. CREATE VIEW: no rows to show
+                print("OK\n")
+            else:
+                print_table(cur, cur.fetchmany(50))
         except sqlite3.Error as e:
             print(f"ERROR: {e}\n")
+    conn.commit()
     conn.close()
 
 

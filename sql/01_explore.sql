@@ -1,36 +1,31 @@
 -- ============================================================
--- Step 1: Explore the data
+-- 01 Explore the data
 -- Run with:  python run_query.py sql/01_explore.sql
 -- ============================================================
 
--- Example 1: look at the first 10 rows of each table.
-SELECT * FROM stores LIMIT 10;
-SELECT * FROM products LIMIT 10;
-SELECT * FROM orders LIMIT 10;
+-- First rows of each table
+SELECT * FROM stores LIMIT 5;
+SELECT * FROM products LIMIT 5;
+SELECT * FROM orders LIMIT 5;
 
--- Example 2: how many order lines are there?
-SELECT COUNT(*) AS order_lines FROM orders;
+-- How many order lines, and what period do they cover?
+SELECT COUNT(*)        AS order_lines,
+       MIN(order_date) AS first_day,
+       MAX(order_date) AS last_day
+FROM orders;
 
--- Example 3: what date range does the data cover?
-SELECT MIN(order_date) AS first_day, MAX(order_date) AS last_day FROM orders;
+-- How many products are in each category?
+SELECT category, COUNT(*) AS products
+FROM products
+GROUP BY category
+ORDER BY category;
 
+-- Stores per state
+SELECT state, COUNT(*) AS stores
+FROM stores
+GROUP BY state
+ORDER BY stores DESC;
 
--- ============================================================
--- YOUR TURN — write a query under each question, then run the file.
--- Hints are in STEPS.md. Delete the "SELECT 'todo'" line when you start.
--- ============================================================
-
--- Q1. How many products are in each category?
---     (hint: GROUP BY category)
-SELECT 'todo Q1';
-
--- Q2. List all stores in NSW.
---     (hint: WHERE state = 'NSW')
-SELECT 'todo Q2';
-
--- Q3. What are the 5 most expensive products by unit_price?
---     (hint: ORDER BY ... DESC LIMIT 5)
-SELECT 'todo Q3';
-
--- Q4. How many order lines had a discount (discount > 0)?
-SELECT 'todo Q4';
+-- Share of order lines sold at a discount
+SELECT ROUND(100.0 * SUM(discount > 0) / COUNT(*), 1) AS pct_discounted
+FROM orders;
