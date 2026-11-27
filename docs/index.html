@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Harbour &amp; Co. Sales Dashboard</title>
-<meta name="description" content="Retail sales analysis dashboard built with SQL and Python by Ibrahim Camara.">
+<meta name="description" content="Retail performance dashboard: two years of sales across 12 stores, analysed with SQL and presented as an interactive dashboard.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%232a78d6'/%3E%3Cpath d='M20 8v14h9z' fill='white'/%3E%3Cpath d='M8 27q3-3 6 0t6 0 6 0 6 0' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7;
+    --page: #f4f4f1;
     --surface: #fcfcfb;
     --ink: #0b0b0b;
     --ink-2: #52514e;
@@ -17,139 +18,312 @@
     --axis: #c3c2b7;
     --border: rgba(11,11,11,0.10);
     --series-1: #2a78d6;
-    --series-1-soft: #cde2fb;
+    --series-1-mid: #86b6ef;
+    --series-2: #eb6834;
+    --accent-wash: #eaf2fd;
     --good: #006300;
     --bad: #d03b3b;
   }
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) {
       color-scheme: dark;
-      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7;
-      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
-      --border: rgba(255,255,255,0.10); --series-1: #3987e5; --series-1-soft: #184f95;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5; --series-1-mid: #184f95; --series-2: #d95926; --accent-wash: #16304f;
       --good: #0ca30c; --bad: #e66767;
     }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-1-mid: #184f95; --series-2: #d95926; --accent-wash: #16304f;
+    --good: #0ca30c; --bad: #e66767;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--page); color: var(--ink);
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
-  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
-  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
-  .sub { color: var(--ink-2); margin: 0; font-size: 14px; }
-  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: 3px; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 28px 16px 48px; }
+
+  /* Header */
+  .top { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .brand { display: flex; gap: 14px; align-items: center; min-width: 0; }
+  .logo { width: 48px; height: 48px; flex: none; }
+  .logo .tile { fill: var(--series-1); }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin: 2px 0 0; font-size: 14px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 3px; }
   .seg button {
     font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--ink-2);
-    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    padding: 7px 16px; border-radius: 7px; cursor: pointer;
   }
+  .seg button:hover { color: var(--ink); }
   .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
   .seg button:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+  .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px 16px; margin-bottom: 12px; }
+  h2 { font-size: 16px; margin: 0; }
+  .note { color: var(--ink-2); font-size: 13px; margin: 2px 0 0; }
+  .section { margin-top: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
   .kpi .label { color: var(--ink-2); font-size: 13px; }
-  .kpi .value { font-size: 28px; font-weight: 650; margin-top: 2px; }
-  .kpi .delta { font-size: 13px; color: var(--muted); min-height: 20px; }
+  .kpi .value { font-size: 30px; font-weight: 650; line-height: 1.25; margin-top: 4px; }
+  .kpi .delta { font-size: 13px; color: var(--muted); margin-top: 2px; }
   .delta.up { color: var(--good); } .delta.down { color: var(--bad); }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-  .full { margin-top: 12px; }
-  h2 { font-size: 15px; margin: 0; }
-  .note { color: var(--ink-2); font-size: 13px; margin: 2px 0 10px; }
-  svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+  /* Executive summary */
+  .insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .insight { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--page); }
+  .insight-value { font-size: 26px; font-weight: 650; line-height: 1.2; }
+  .insight-label { color: var(--ink); font-size: 14px; margin-top: 4px; }
+  .insight-action { color: var(--ink-2); font-size: 13px; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--grid); }
+  .insight-action b { color: var(--series-1); font-weight: 600; }
+
+  /* Charts */
+  svg { display: block; overflow: visible; }
   svg text { fill: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
   svg .tick { fill: var(--muted); font-size: 11px; }
-  svg .val { fill: var(--ink); font-size: 12px; }
+  svg .val { fill: var(--ink); }
+  svg .strong { fill: var(--ink); font-weight: 600; }
   .gridline { stroke: var(--grid); stroke-width: 1; }
   .baseline { stroke: var(--axis); stroke-width: 1; }
   .bar { fill: var(--series-1); }
-  .bar.dim { fill: var(--series-1-soft); }
-  .hit { fill: transparent; cursor: default; }
-  .line { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; }
+  .bar.mid { fill: var(--series-1-mid); }
+  .hit { fill: transparent; }
+  .line { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .line.prior { stroke: var(--muted); stroke-dasharray: 5 4; }
   .area { fill: var(--series-1); opacity: 0.08; }
   .cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
   .dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
+  .dot.prior { fill: var(--muted); }
+  .state { stroke: var(--surface); stroke-width: 1.2; stroke-linejoin: round; }
+  .state:hover { filter: brightness(1.06); }
+  .map text { pointer-events: none; }
+  .map .lbl-strong { font-weight: 650; font-size: 13px; }
+  .store-dot { fill: var(--series-2); stroke: var(--surface); stroke-width: 2; cursor: default; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--ink-2); font-size: 13px; align-items: center; }
+  .key { display: inline-flex; align-items: center; gap: 6px; }
+  .sw-line { width: 22px; height: 0; border-top: 2px solid var(--series-1); }
+  .sw-line.prior { border-top: 2px dashed var(--muted); }
+  .sw-grad { width: 120px; height: 10px; border-radius: 3px; }
+  .sw-box { width: 12px; height: 12px; border-radius: 3px; }
+  .sw-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--series-2); }
+
   #tip {
     position: fixed; pointer-events: none; z-index: 10; background: var(--surface); color: var(--ink);
-    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12); opacity: 0; transition: opacity .1s; max-width: 240px;
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.45;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.14); opacity: 0; transition: opacity .1s; max-width: 260px;
   }
   #tip b { display: block; margin-bottom: 2px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-  th, td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
-  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
-  th { color: var(--ink-2); font-weight: 600; font-size: 13px; }
-  .table-scroll { overflow-x: auto; }
-  .insights ul { margin: 8px 0 0; padding-left: 20px; }
-  .insights li { margin-bottom: 6px; }
-  footer { color: var(--muted); font-size: 13px; margin-top: 24px; }
+
+  /* Heatmap */
+  .scroll-x { overflow-x: auto; }
+  .heat { width: 100%; min-width: 680px; border-collapse: separate; border-spacing: 3px; font-variant-numeric: tabular-nums; }
+  .heat th { font-size: 12px; font-weight: 500; color: var(--muted); padding: 2px 4px; }
+  .heat th[scope="row"] { text-align: left; color: var(--ink-2); font-size: 13px; padding-right: 10px; white-space: nowrap; }
+  .heat td { text-align: center; font-size: 12px; padding: 9px 0; border-radius: 5px; width: 7.2%; }
+  .heat-legend { margin-top: 10px; }
+
+  /* Tables */
+  table.data { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  table.data th, table.data td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  table.data th { color: var(--ink-2); font-weight: 600; font-size: 12px; }
+  table.data .l { text-align: left; }
+  table.data td.rank { color: var(--muted); width: 28px; text-align: left; }
+  .dbar { display: inline-block; width: 64px; height: 8px; background: var(--grid); border-radius: 0 4px 4px 0; margin-right: 8px; vertical-align: middle; }
+  .dbar span { display: block; height: 100%; background: var(--series-1); border-radius: 0 4px 4px 0; }
+  .numw { display: inline-block; min-width: 4.8em; text-align: right; }
+
+  /* Discount minis */
+  .minis { display: grid; grid-template-columns: 1fr; gap: 6px; }
+  .mini-title { font-size: 13px; color: var(--ink); font-weight: 600; margin: 4px 0 0; }
+
+  /* Method */
+  .figure { margin: 0; }
+  .figure img { display: block; width: 100%; height: auto; min-width: 640px; }
+  .figure figcaption { color: var(--ink-2); font-size: 13px; margin-top: 8px; }
+  .method { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .method div { background: var(--page); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--ink-2); }
+  .method b { display: block; color: var(--ink); font-size: 14px; margin-bottom: 4px; }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12.5px; }
+
+  footer { color: var(--muted); font-size: 13px; margin-top: 28px; text-align: center; }
   footer a { color: var(--series-1); }
-  @media (max-width: 820px) {
+
+  @media (max-width: 900px) {
+    .insight-grid, .method { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 760px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
-    .grid2 { grid-template-columns: 1fr; }
+    .grid2, .insight-grid, .method { grid-template-columns: 1fr; }
     .kpi .value { font-size: 24px; }
+    h1 { font-size: 22px; }
+    .card { padding: 16px; }
+    .dbar { display: none; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <h1>Harbour &amp; Co. Sales Dashboard</h1>
-      <p class="sub">Fictional retailer · 12 stores in 5 states · Jan 2024 – Dec 2025 · synthetic data</p>
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+        <rect class="tile" width="48" height="48" rx="12"/>
+        <path d="M24 9v17h11z" fill="#fff"/>
+        <path d="M22 13v13h-8z" fill="#fff" opacity="0.7"/>
+        <path d="M9 32q3.75-3.5 7.5 0t7.5 0 7.5 0 7.5 0" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M13 38q2.75-2.5 5.5 0t5.5 0 5.5 0 5.5 0" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+      </svg>
+      <div>
+        <h1>Harbour &amp; Co. Sales Dashboard</h1>
+        <p class="sub">Retail performance review · 12 stores · 5 states · Jan 2024 – Dec 2025</p>
+      </div>
     </div>
-    <div class="seg" role="group" aria-label="Period" id="period"></div>
+    <div class="seg" role="group" aria-label="Choose period" id="period"></div>
   </header>
 
   <section class="kpis" id="kpis" aria-label="Key figures"></section>
 
-  <section class="card full">
-    <h2>Monthly revenue</h2>
-    <p class="note" id="trend-note"></p>
+  <section class="card section" aria-labelledby="sum-h">
+    <div class="card-head">
+      <div>
+        <h2 id="sum-h">Executive summary</h2>
+        <p class="note">Six findings from two years of sales, each with a recommended action</p>
+      </div>
+    </div>
+    <div class="insight-grid" id="insights"></div>
+  </section>
+
+  <section class="card section" aria-labelledby="trend-h">
+    <div class="card-head">
+      <div>
+        <h2 id="trend-h">Monthly revenue</h2>
+        <p class="note" id="trend-note"></p>
+      </div>
+      <div class="legend" id="trend-legend"></div>
+    </div>
     <div id="trend"></div>
   </section>
 
   <div class="grid2">
-    <section class="card">
-      <h2>Revenue by category</h2>
-      <p class="note">Bar = revenue · label = profit margin</p>
+    <section class="card" aria-labelledby="map-h">
+      <div class="card-head">
+        <div>
+          <h2 id="map-h">Revenue by state</h2>
+          <p class="note">Darker states earn more · dots show store locations</p>
+        </div>
+      </div>
+      <div id="map" class="map"></div>
+      <div class="legend" style="margin-top:10px">
+        <span class="key">Lower <i class="sw-grad" id="map-grad"></i> Higher revenue</span>
+        <span class="key"><i class="sw-box" id="map-none"></i> No stores</span>
+        <span class="key"><i class="sw-dot"></i> Store location</span>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="stores-h">
+      <div class="card-head">
+        <div>
+          <h2 id="stores-h">Store league table</h2>
+          <p class="note">Ranked by revenue</p>
+        </div>
+      </div>
+      <div class="scroll-x"><table class="data" id="stores"></table></div>
+    </section>
+  </div>
+
+  <section class="card section" aria-labelledby="heat-h">
+    <div class="card-head">
+      <div>
+        <h2 id="heat-h">Seasonality by category</h2>
+        <p class="note">Each month compared with that category's average month (1.0× = a normal month)</p>
+      </div>
+    </div>
+    <div class="scroll-x"><table class="heat" id="heat"></table></div>
+    <div class="legend heat-legend">
+      <span class="key">Quieter <i class="sw-grad" id="heat-grad"></i> Busier than usual</span>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="card" aria-labelledby="cat-h">
+      <div class="card-head">
+        <div>
+          <h2 id="cat-h">Revenue and margin by category</h2>
+          <p class="note">Bar = revenue · label = profit margin</p>
+        </div>
+      </div>
       <div id="category"></div>
     </section>
-    <section class="card">
-      <h2>Revenue by state</h2>
-      <p class="note">Bar = revenue · label = share of total</p>
-      <div id="state"></div>
+    <section class="card" aria-labelledby="dow-h">
+      <div class="card-head">
+        <div>
+          <h2 id="dow-h">Average revenue per trading day</h2>
+          <p class="note" id="dow-note"></p>
+        </div>
+      </div>
+      <div id="weekday"></div>
     </section>
   </div>
 
   <div class="grid2">
-    <section class="card">
-      <h2>Top 10 products by revenue</h2>
-      <p class="note">Units sold in the tooltip</p>
+    <section class="card" aria-labelledby="prod-h">
+      <div class="card-head">
+        <div>
+          <h2 id="prod-h">Top 10 products</h2>
+          <p class="note">By revenue · hover for units sold and margin</p>
+        </div>
+      </div>
       <div id="products"></div>
     </section>
-    <section class="card">
-      <h2>Do discounts pay off?</h2>
-      <p class="note">Average profit per order line, by discount level</p>
-      <div id="discount"></div>
+    <section class="card" aria-labelledby="disc-h">
+      <div class="card-head">
+        <div>
+          <h2 id="disc-h">Do discounts pay off?</h2>
+          <p class="note" id="disc-note"></p>
+        </div>
+      </div>
+      <div class="minis">
+        <p class="mini-title">Units per order line</p>
+        <div id="disc-units"></div>
+        <p class="mini-title">Profit per order line</p>
+        <div id="disc-profit"></div>
+      </div>
     </section>
   </div>
 
-  <section class="card full">
-    <h2>Store performance</h2>
-    <p class="note">Sorted by revenue</p>
-    <div class="table-scroll"><table id="stores"></table></div>
-  </section>
-
-  <section class="card full insights">
-    <h2>Key insights (Jan 2024 – Dec 2025)</h2>
-    <ul id="insights"></ul>
+  <section class="card section" aria-labelledby="how-h">
+    <div class="card-head">
+      <div>
+        <h2 id="how-h">How this analysis was built</h2>
+        <p class="note">From raw data to dashboard, and the database design behind it</p>
+      </div>
+    </div>
+    <figure class="figure">
+      <div class="scroll-x"><img src="img/pipeline.svg" width="1000" height="212" alt="Data pipeline: Python generates the data, saved as 3 CSV files, loaded into SQLite, analysed with SQL, presented in this dashboard on GitHub Pages."></div>
+      <figcaption>Data pipeline. Every number on this page is produced by SQL queries in the project repository.</figcaption>
+    </figure>
+    <figure class="figure" style="margin-top:18px">
+      <div class="scroll-x"><img src="img/er-diagram.svg" width="900" height="412" alt="Entity relationship diagram: stores and products each link one-to-many to orders; all three feed the sales view."></div>
+      <figcaption>Database design. Stores and products each link one-to-many to order lines; a SQL view joins them and calculates revenue and profit.</figcaption>
+    </figure>
+    <div class="method">
+      <div><b>Formulas</b>Revenue = quantity × unit price × (1 − discount)<br>Profit = revenue − quantity × unit cost<br>Margin = profit ÷ revenue</div>
+      <div><b>Tools</b>SQLite (joins, views, window functions), Python (data preparation and export), HTML, CSS and JavaScript (charts drawn as SVG, no chart library)</div>
+      <div><b>Data</b>Synthetic data for a fictional retailer, generated with a fixed seed so every result can be reproduced. 20,612 order lines, 40 products, 12 stores.</div>
+    </div>
   </section>
 
   <footer>
-    Built by Ibrahim Camara with SQL (SQLite) and Python, with help from Claude Code as a learning tool.
-    Source code and queries: <a href="https://github.com/Ibbygit77/retail-sales-analysis">github.com/Ibbygit77/retail-sales-analysis</a>.
-    All data is synthetic.
+    © 2026 Ibrahim Camara · Portfolio project · Data is synthetic and for demonstration only ·
+    <a href="https://github.com/Ibbygit77/retail-sales-analysis">Source code on GitHub</a>
   </footer>
 </div>
 <div id="tip" role="status" aria-live="polite"></div>
@@ -157,23 +331,57 @@
 <script src="data.js"></script>
 <script>
 (function () {
+  "use strict";
   const D = window.DASHBOARD_DATA;
   const NS = "http://www.w3.org/2000/svg";
+  const root = document.documentElement;
+  const theme = new URLSearchParams(location.search).get("theme");
+  if (theme === "light" || theme === "dark") root.dataset.theme = theme;
+  const mq = matchMedia("(prefers-color-scheme: dark)");
+  const isDark = () => root.dataset.theme === "dark" || (root.dataset.theme !== "light" && mq.matches);
+
   const tip = document.getElementById("tip");
   const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const YEARS = Object.keys(D).filter(p => p !== "All").sort();
   let period = "All";
 
+  // ---------- formatting ----------
   const money = v => {
     const a = Math.abs(v);
     if (a === 0) return "$0";
     if (a >= 1e6) return "$" + (v / 1e6).toFixed(2) + "M";
     if (a >= 1e3) return "$" + Math.round(v / 1e3) + "k";
-    return "$" + v.toFixed(2);
+    return "$" + Math.round(v);
   };
+  const moneyK = v => "$" + (v / 1000).toFixed(1) + "k";
   const full = v => "$" + Math.round(v).toLocaleString("en-AU");
   const num = v => Math.round(v).toLocaleString("en-AU");
+  const signed = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
   const monthLabel = m => MONTHS[+m.slice(5) - 1] + " " + m.slice(0, 4);
 
+  // ---------- colour ----------
+  const hex2rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const rgb2hex = c => "#" + c.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+  const mix = (a, b, t) => { const A = hex2rgb(a), B = hex2rgb(b); return rgb2hex(A.map((v, i) => v + (B[i] - v) * t)); };
+  const ramp = (stops, t) => {
+    t = Math.max(0, Math.min(1, t));
+    const p = t * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(p));
+    return mix(stops[i], stops[i + 1], p - i);
+  };
+  const lum = h => {
+    const [r, g, b] = hex2rgb(h).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const inkOn = h => (lum(h) < 0.19 ? "#ffffff" : "#0b0b0b");
+  const SEQ = { light: ["#b7d3f6", "#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281"],
+                dark:  ["#184f95", "#1c5cab", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4"] };
+  const DIV = { light: { mid: "#f0efec", pos: "#1c5cab", neg: "#e34948" },
+                dark:  { mid: "#383835", pos: "#6da7ec", neg: "#e66767" } };
+  const NONE = { light: "#e4e3dd", dark: "#2c2c2a" };
+  const mode = () => (isDark() ? "dark" : "light");
+
+  // ---------- helpers ----------
   function el(tag, attrs, parent, text) {
     const e = document.createElementNS(NS, tag);
     for (const k in attrs) e.setAttribute(k, attrs[k]);
@@ -181,6 +389,11 @@
     if (parent) parent.appendChild(e);
     return e;
   }
+  function svgFor(box, W, H, label) {
+    box.innerHTML = "";
+    return el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": label }, box);
+  }
+  const widthOf = box => Math.max(280, Math.floor(box.getBoundingClientRect().width));
   function showTip(html, ev) {
     tip.innerHTML = html;
     tip.style.opacity = 1;
@@ -191,13 +404,15 @@
     tip.style.left = x + "px"; tip.style.top = y + "px";
   }
   const hideTip = () => { tip.style.opacity = 0; };
-
+  function onHover(node, htmlFn) {
+    node.addEventListener("mousemove", ev => showTip(htmlFn(), ev));
+    node.addEventListener("mouseleave", hideTip);
+  }
   function niceMax(v) {
     const p = Math.pow(10, Math.floor(Math.log10(v)));
-    for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
+    for (const m of [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
     return 10 * p;
   }
-  // Horizontal bar path with 4px rounded data end, square at the baseline.
   function hbar(x, y, w, h) {
     const r = Math.min(4, w, h / 2);
     return `M${x},${y}h${w - r}a${r},${r} 0 0 1 ${r},${r}v${h - 2 * r}a${r},${r} 0 0 1 ${-r},${r}h${-(w - r)}z`;
@@ -210,190 +425,344 @@
   // ---------- KPI tiles ----------
   function renderKpis() {
     const k = D[period].kpi;
-    const prev = period === "2025" ? D["2024"].kpi : null;
+    const prevYear = YEARS[YEARS.indexOf(period) - 1];
+    const prev = prevYear ? D[prevYear].kpi : null;
+    const ch = (a, b) => { const c = (a - b) / b * 100; return { cls: c >= 0 ? "up" : "down", text: (c >= 0 ? "▲ " : "▼ ") + Math.abs(c).toFixed(1) + "% vs " + prevYear }; };
+    const chPts = (a, b) => { const c = a - b; return { cls: c >= 0 ? "up" : "down", text: (c >= 0 ? "▲ " : "▼ ") + Math.abs(c).toFixed(1) + " pts vs " + prevYear }; };
+    const base = period === "All" ? "Jan 2024 – Dec 2025" : "Full year " + period;
     const tiles = [
-      ["Revenue", money(k.revenue), prev && pct(k.revenue, prev.revenue)],
-      ["Profit", money(k.profit), prev && pct(k.profit, prev.profit)],
-      ["Profit margin", k.margin.toFixed(1) + "%", prev && pts(k.margin, prev.margin)],
-      ["Units sold", num(k.units), prev && pct(k.units, prev.units)],
+      ["Revenue", money(k.revenue), prev && ch(k.revenue, prev.revenue)],
+      ["Gross profit", money(k.profit), prev && ch(k.profit, prev.profit)],
+      ["Profit margin", k.margin.toFixed(1) + "%", prev && chPts(k.margin, prev.margin)],
+      ["Units sold", num(k.units), prev && ch(k.units, prev.units)],
     ];
-    document.getElementById("kpis").innerHTML = tiles.map(([l, v, d]) => `
-      <div class="card kpi"><div class="label">${l}</div><div class="value">${v}</div>
-      <div class="delta ${d ? d.cls : ""}">${d ? d.text : period === "All" ? "2 years combined" : "&nbsp;"}</div></div>`).join("");
-  }
-  function pct(a, b) {
-    const c = (a - b) / b * 100;
-    return { cls: c >= 0 ? "up" : "down", text: (c >= 0 ? "▲ " : "▼ ") + Math.abs(c).toFixed(1) + "% vs 2024" };
-  }
-  function pts(a, b) {
-    const c = a - b;
-    return { cls: c >= 0 ? "up" : "down", text: (c >= 0 ? "▲ " : "▼ ") + Math.abs(c).toFixed(1) + " pts vs 2024" };
+    document.getElementById("kpis").innerHTML = tiles.map(([l, v, d]) =>
+      `<div class="card kpi"><div class="label">${l}</div><div class="value">${v}</div>` +
+      `<div class="delta ${d ? d.cls : ""}">${d ? d.text : base}</div></div>`).join("");
   }
 
-  // ---------- Monthly trend (line + crosshair) ----------
+  // ---------- Executive summary (always both years) ----------
+  function renderInsights() {
+    const A = D.All, k = A.kpi;
+    const avgMonth = k.revenue / A.monthly.length;
+    const dec = A.monthly.filter(r => r.month.endsWith("-12")).reduce((s, r) => s + r.revenue, 0) / YEARS.length;
+    const elec = A.category.find(c => c.name === "Electronics");
+    const d0 = A.discount[0], d10 = A.discount[1], d30 = A.discount[A.discount.length - 1];
+    const east = A.state.filter(s => s.name === "NSW" || s.name === "VIC");
+    const eastShare = east.reduce((s, r) => s + r.revenue, 0) / k.revenue * 100;
+    const eastStores = east.reduce((s, r) => s + r.stores, 0);
+    const wd = A.weekday.filter(r => r.dow >= 1 && r.dow <= 5), we = A.weekday.filter(r => r.dow === 0 || r.dow === 6);
+    const avg = a => a.reduce((s, r) => s + r.revenue_per_day, 0) / a.length;
+    const weekendLift = (avg(we) / avg(wd) - 1) * 100;
+    const first = D[YEARS[0]].kpi, last = D[YEARS[YEARS.length - 1]].kpi;
+    const yoy = (last.revenue - first.revenue) / first.revenue * 100;
+    const cards = [
+      [(dec / avgMonth).toFixed(1) + "×", "December revenue compared with an average month",
+        "Lock in Christmas stock and casual staff by October."],
+      [elec.margin.toFixed(1) + "%", `Electronics margin, the lowest category (overall ${k.margin}%), yet ${Math.round(elec.revenue / k.revenue * 100)}% of revenue`,
+        "Renegotiate supplier costs and review Electronics pricing."],
+      [signed((d30.profit / d0.profit - 1) * 100, 0) + "%", `Profit per order line at 30% off, even though units per line rise ${Math.round((d30.units / d0.units - 1) * 100)}%`,
+        `Keep promotions to 10% off, which keeps ${Math.round(d10.profit / d0.profit * 100)}% of profit per line.`],
+      [Math.round(eastShare) + "%", `of revenue comes from NSW and Victoria (${eastStores} of 12 stores)`,
+        "Prioritise east-coast marketing and new store sites."],
+      [signed(weekendLift, 0) + "%", "more revenue per day on weekends than on weekdays",
+        "Roster more staff on Saturdays and Sundays."],
+      [signed(yoy) + "%", `Revenue change ${YEARS[YEARS.length - 1]} vs ${YEARS[0]}, with margin steady at ${last.margin}%`,
+        "Focus on winning more customers, not cutting costs."],
+    ];
+    document.getElementById("insights").innerHTML = cards.map(([v, l, a]) =>
+      `<article class="insight"><div class="insight-value">${v}</div><div class="insight-label">${l}</div>` +
+      `<p class="insight-action"><b>Action</b> · ${a}</p></article>`).join("");
+  }
+
+  // ---------- Monthly trend ----------
   function renderTrend() {
-    const rows = D[period].monthly;
     const box = document.getElementById("trend");
-    box.innerHTML = "";
-    const W = 1060, H = 280, m = { t: 12, r: 16, b: 30, l: 52 };
+    const W = widthOf(box), H = 300, m = { t: 14, r: period === "All" ? 46 : 16, b: 28, l: 52 };
     const iw = W - m.l - m.r, ih = H - m.t - m.b;
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
-      "aria-label": "Line chart of monthly revenue" }, box);
-    const max = niceMax(Math.max(...rows.map(r => r.revenue)));
-    const x = i => m.l + (rows.length === 1 ? iw / 2 : i * iw / (rows.length - 1));
-    const y = v => m.t + ih - v / max * ih;
-    for (let i = 0; i <= 4; i++) {
-      const v = max * i / 4, yy = y(v);
-      el("line", { x1: m.l, x2: W - m.r, y1: yy, y2: yy, class: i ? "gridline" : "baseline" }, svg);
-      el("text", { x: m.l - 8, y: yy + 4, "text-anchor": "end", class: "tick" }, svg, money(v));
-    }
-    rows.forEach((r, i) => {
-      const mo = +r.month.slice(5);
-      if (rows.length <= 12 || mo === 1 || mo === 7) {
-        el("text", { x: x(i), y: H - 8, "text-anchor": "middle", class: "tick" }, svg,
-          rows.length <= 12 ? MONTHS[mo - 1] : MONTHS[mo - 1] + " " + r.month.slice(2, 4));
-      }
-    });
-    const pts = rows.map((r, i) => `${x(i)},${y(r.revenue)}`).join(" ");
-    el("polygon", { points: `${x(0)},${y(0)} ${pts} ${x(rows.length - 1)},${y(0)}`, class: "area" }, svg);
-    el("polyline", { points: pts, class: "line" }, svg);
-    // Direct label on the peak month
-    const peak = rows.reduce((a, b, i) => b.revenue > rows[a].revenue ? i : a, 0);
-    el("circle", { cx: x(peak), cy: y(rows[peak].revenue), r: 4, class: "dot" }, svg);
-    el("text", { x: x(peak) - 8, y: y(rows[peak].revenue) - 2, "text-anchor": "end", class: "val" }, svg,
-      monthLabel(rows[peak].month) + ": " + money(rows[peak].revenue));
-
-    const cross = el("line", { y1: m.t, y2: m.t + ih, class: "cross", visibility: "hidden" }, svg);
-    const dot = el("circle", { r: 5, class: "dot", visibility: "hidden" }, svg);
-    const hit = el("rect", { x: m.l, y: m.t, width: iw, height: ih, class: "hit" }, svg);
-    hit.addEventListener("mousemove", ev => {
-      const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
-      const p = pt.matrixTransform(svg.getScreenCTM().inverse());
-      const i = Math.max(0, Math.min(rows.length - 1, Math.round((p.x - m.l) / iw * (rows.length - 1))));
-      const r = rows[i];
-      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
-      dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(r.revenue)); dot.setAttribute("visibility", "visible");
-      showTip(`<b>${monthLabel(r.month)}</b>Revenue ${full(r.revenue)}<br>Profit ${full(r.profit)}`, ev);
-    });
-    hit.addEventListener("mouseleave", () => {
-      hideTip(); cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden");
-    });
-    const avg = rows.reduce((s, r) => s + r.revenue, 0) / rows.length;
-    document.getElementById("trend-note").textContent =
-      `Peak: ${monthLabel(rows[peak].month)} at ${money(rows[peak].revenue)}, ` +
-      `${(rows[peak].revenue / avg).toFixed(1)}× the average month (${money(avg)}).`;
-  }
-
-  // ---------- Horizontal bar chart ----------
-  function renderHBars(id, rows, labelFn, tipFn, labelW) {
-    const box = document.getElementById(id);
-    box.innerHTML = "";
-    const bh = 20, gap = 10, W = 520, m = { t: 4, r: 64, b: 4, l: labelW };
-    const H = m.t + m.b + rows.length * (bh + gap) - gap;
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": id + " bar chart" }, box);
-    const max = Math.max(...rows.map(r => r.revenue));
-    const iw = W - m.l - m.r;
-    el("line", { x1: m.l, x2: m.l, y1: 0, y2: H, class: "baseline" }, svg);
-    rows.forEach((r, i) => {
-      const y = m.t + i * (bh + gap), w = Math.max(2, r.revenue / max * iw);
-      el("text", { x: m.l - 8, y: y + bh / 2 + 4, "text-anchor": "end" }, svg, r.name);
-      el("path", { d: hbar(m.l + 1, y, w, bh), class: "bar" }, svg);
-      el("text", { x: m.l + w + 8, y: y + bh / 2 + 4, class: "val" }, svg, labelFn(r));
-      const hit = el("rect", { x: 0, y: y - gap / 2, width: W, height: bh + gap, class: "hit" }, svg);
-      hit.addEventListener("mousemove", ev => showTip(tipFn(r), ev));
-      hit.addEventListener("mouseleave", hideTip);
-    });
-  }
-
-  // ---------- Discount chart (vertical bars) ----------
-  function renderDiscount() {
-    const rows = D[period].discount;
-    const box = document.getElementById("discount");
-    box.innerHTML = "";
-    const W = 520, H = 250, m = { t: 24, r: 8, b: 44, l: 44 };
-    const iw = W - m.l - m.r, ih = H - m.t - m.b;
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
-      "aria-label": "Bar chart of average profit per order line by discount level" }, box);
-    const max = niceMax(Math.max(...rows.map(r => r.profit)));
+    const svg = svgFor(box, W, H, "Line chart of monthly revenue");
+    const series = period === "All"
+      ? YEARS.map((y, i) => ({ name: y, rows: D.All.monthly.filter(r => r.month.startsWith(y)), prior: i < YEARS.length - 1 }))
+      : [{ name: period, rows: D[period].monthly, prior: false }];
+    const max = niceMax(Math.max(...series.flatMap(s => s.rows.map(r => r.revenue))));
+    const x = i => m.l + i * iw / 11;
     const y = v => m.t + ih - v / max * ih;
     for (let i = 0; i <= 4; i++) {
       const v = max * i / 4;
       el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: i ? "gridline" : "baseline" }, svg);
-      el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", class: "tick" }, svg, "$" + Math.round(v));
+      el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", class: "tick" }, svg, money(v));
     }
-    const slot = iw / rows.length, bw = Math.min(64, slot * 0.5);
-    rows.forEach((r, i) => {
-      const cx = m.l + slot * i + slot / 2, top = y(r.profit);
-      el("path", { d: vbar(cx - bw / 2, top, bw, m.t + ih - top), class: "bar" }, svg);
-      el("text", { x: cx, y: top - 6, "text-anchor": "middle", class: "val" }, svg, "$" + r.profit.toFixed(0));
-      el("text", { x: cx, y: H - 24, "text-anchor": "middle" }, svg, r.pct === 0 ? "No discount" : r.pct + "% off");
-      el("text", { x: cx, y: H - 8, "text-anchor": "middle", class: "tick" }, svg, r.units.toFixed(2) + " units/line");
-      const hit = el("rect", { x: cx - slot / 2, y: m.t, width: slot, height: ih, class: "hit" }, svg);
-      hit.addEventListener("mousemove", ev => showTip(
-        `<b>${r.pct === 0 ? "No discount" : r.pct + "% discount"}</b>` +
-        `${num(r.lines)} order lines<br>Avg ${r.units.toFixed(2)} units per line<br>` +
-        `Avg profit $${r.profit.toFixed(2)} per line<br>Margin ${r.margin}%`, ev));
-      hit.addEventListener("mouseleave", hideTip);
+    const step = iw < 420 ? 2 : 1;
+    MONTHS.forEach((mo, i) => { if (i % step === 0) el("text", { x: x(i), y: H - 6, "text-anchor": "middle", class: "tick" }, svg, mo); });
+
+    if (series.length === 1) {
+      const rows = series[0].rows;
+      const pts = rows.map((r, i) => `${x(i)},${y(r.revenue)}`).join(" ");
+      el("polygon", { points: `${x(0)},${y(0)} ${pts} ${x(rows.length - 1)},${y(0)}`, class: "area" }, svg);
+      el("polyline", { points: pts, class: "line" }, svg);
+      const peak = rows.reduce((a, r, i) => (r.revenue > rows[a].revenue ? i : a), 0);
+      el("circle", { cx: x(peak), cy: y(rows[peak].revenue), r: 4, class: "dot" }, svg);
+      el("text", { x: x(peak) - 8, y: y(rows[peak].revenue) + 4, "text-anchor": "end", class: "val" }, svg,
+        `${monthLabel(rows[peak].month)}: ${money(rows[peak].revenue)}`);
+      const avg = rows.reduce((s, r) => s + r.revenue, 0) / rows.length;
+      document.getElementById("trend-note").textContent =
+        `Peak in ${monthLabel(rows[peak].month)} at ${money(rows[peak].revenue)}, ${(rows[peak].revenue / avg).toFixed(1)}× the average month (${money(avg)}).`;
+      document.getElementById("trend-legend").innerHTML = "";
+    } else {
+      // prior years first so the latest year draws on top
+      series.forEach(s => {
+        el("polyline", { points: s.rows.map((r, i) => `${x(i)},${y(r.revenue)}`).join(" "), class: "line" + (s.prior ? " prior" : "") }, svg);
+      });
+      // direct labels at the line ends, nudged apart
+      const ends = series.map(s => ({ s, yy: y(s.rows[11].revenue) })).sort((a, b) => a.yy - b.yy);
+      for (let i = 1; i < ends.length; i++) if (ends[i].yy - ends[i - 1].yy < 15) ends[i].yy = ends[i - 1].yy + 15;
+      ends.forEach(e => el("text", { x: x(11) + 8, y: e.yy + 4, class: e.s.prior ? "tick" : "strong" }, svg, e.s.name));
+      const tot = series.map(s => s.rows.reduce((a, r) => a + r.revenue, 0));
+      const chg = (tot[tot.length - 1] / tot[0] - 1) * 100;
+      document.getElementById("trend-note").textContent =
+        `${YEARS[YEARS.length - 1]} revenue was ${Math.abs(chg).toFixed(1)}% ${chg >= 0 ? "higher" : "lower"} than ${YEARS[0]}. Both years build from October to a December peak.`;
+      document.getElementById("trend-legend").innerHTML = series.slice().reverse().map(s =>
+        `<span class="key"><i class="sw-line${s.prior ? " prior" : ""}"></i>${s.name}</span>`).join("");
+    }
+
+    // crosshair + tooltip
+    const cross = el("line", { y1: m.t, y2: m.t + ih, class: "cross", visibility: "hidden" }, svg);
+    const dots = series.map(s => el("circle", { r: 4.5, class: "dot" + (s.prior ? " prior" : ""), visibility: "hidden" }, svg));
+    const hit = el("rect", { x: m.l - 10, y: m.t, width: iw + 20, height: ih, class: "hit" }, svg);
+    hit.addEventListener("mousemove", ev => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.clientX - r.left) * (W / r.width);
+      const i = Math.max(0, Math.min(11, Math.round((px - m.l) / iw * 11)));
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+      series.forEach((s, j) => { dots[j].setAttribute("cx", x(i)); dots[j].setAttribute("cy", y(s.rows[i].revenue)); dots[j].setAttribute("visibility", "visible"); });
+      let html = `<b>${MONTHS[i]}${series.length === 1 ? " " + period : ""}</b>`;
+      if (series.length === 1) {
+        const row = series[0].rows[i];
+        html += `Revenue ${full(row.revenue)}<br>Profit ${full(row.profit)}`;
+      } else {
+        html += series.slice().reverse().map(s => `${s.name}: ${full(s.rows[i].revenue)}`).join("<br>");
+        const a = series[series.length - 1].rows[i].revenue, b = series[0].rows[i].revenue;
+        html += `<br>Change: ${signed((a / b - 1) * 100)}%`;
+      }
+      showTip(html, ev);
+    });
+    hit.addEventListener("mouseleave", () => {
+      hideTip(); cross.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden"));
     });
   }
 
-  // ---------- Store table ----------
+  // ---------- Map of Australia ----------
+  // Simplified outlines (longitude, latitude), drawn with an equirectangular projection.
+  const GEO = {
+    WA: [[[129,-14.9],[128.3,-14.75],[127.6,-14.1],[126.9,-13.75],[126.1,-14.1],[125.3,-14.5],[124.5,-15.3],[123.8,-16.1],[122.95,-16.4],[122.6,-17.3],[122.2,-17.95],[121.6,-18.6],[121,-19.5],[119.6,-20],[118.6,-20.3],[117.4,-20.6],[116.7,-20.6],[115.9,-21],[115.1,-21.6],[114.6,-21.85],[114.15,-21.8],[113.85,-22.5],[113.75,-23.2],[113.65,-24],[113.65,-24.88],[113.4,-25.6],[113.16,-26.15],[113.4,-26.6],[113.8,-27.2],[114.15,-27.7],[114.6,-28.78],[114.95,-29.6],[115.05,-30.3],[115.45,-31],[115.73,-31.95],[115.7,-32.6],[115.6,-33.3],[115,-33.53],[115.13,-34.37],[115.9,-34.85],[116.7,-35],[117.9,-35.05],[118.8,-34.6],[119.4,-34.4],[120.5,-33.95],[121.9,-33.86],[123.2,-34],[123.9,-33.6],[124.9,-32.95],[126.3,-32.3],[127.3,-32.25],[128.1,-31.9],[128.88,-31.68],[129,-31.7],[129,-26]]],
+    NT: [[[129,-14.9],[129,-26],[138,-26],[138,-16.55],[137.3,-16.1],[136.6,-15.6],[135.9,-15.1],[135.45,-14.75],[135.6,-14.2],[135.85,-13.6],[135.9,-13.2],[136.4,-12.85],[136.75,-12.5],[136.95,-12.25],[136.6,-11.95],[136,-12.1],[135.3,-12.2],[134.5,-12],[133.8,-11.9],[133,-11.75],[132.6,-11.4],[132.1,-11.2],[132.3,-11.9],[131.5,-12.2],[130.85,-12.45],[130.4,-12.7],[130.15,-13.25],[129.85,-13.55],[129.7,-14.1],[129.45,-14.55]],
+         [[130,-11.6],[130.4,-11.25],[131,-11.25],[131.5,-11.35],[131.5,-11.75],[130.9,-11.9],[130.3,-11.85]]],
+    SA: [[[129,-26],[138,-26],[141,-26],[141,-29],[141,-34],[140.97,-38.06],[140.7,-38.05],[140,-37.48],[139.75,-37.16],[139.85,-36.83],[139.45,-36.2],[138.88,-35.56],[138.62,-35.56],[138.1,-35.6],[138.3,-35.3],[138.5,-34.92],[138.45,-34.6],[138.15,-34.2],[137.9,-34.42],[137.8,-34.8],[137.75,-35.08],[137.4,-35.2],[136.88,-35.3],[137,-34.9],[137.48,-34.5],[137.62,-33.93],[138,-33.18],[137.77,-32.5],[137.58,-33.03],[136.92,-33.68],[136.1,-34.37],[135.87,-34.73],[135.6,-34.8],[135.4,-34.6],[134.9,-33.65],[134.6,-33.2],[134.2,-32.8],[133.68,-32.13],[132.43,-31.98],[131.15,-31.48],[130,-31.6],[129,-31.7]],
+         [[136.55,-35.75],[137.1,-35.6],[137.75,-35.65],[138.1,-35.75],[137.7,-35.95],[137,-36.05],[136.6,-35.95]]],
+    QLD: [[[138,-16.55],[138,-26],[141,-26],[141,-29],[148.95,-29],[150.3,-28.55],[151.2,-28.85],[152,-28.65],[152.5,-28.3],[153.55,-28.17],[153.43,-27.95],[153.42,-27.4],[153.1,-26.8],[153.1,-26.4],[153.15,-25.95],[153.3,-25.3],[153.25,-24.7],[152.4,-24.85],[151.8,-24.1],[151.3,-23.85],[150.85,-23.4],[150.8,-22.6],[150,-22.1],[149.5,-21.6],[149.2,-21.15],[148.7,-20.3],[148.25,-20],[147.4,-19.4],[146.8,-19.25],[146.3,-18.9],[146,-18.25],[146.05,-17.5],[145.77,-16.92],[145.47,-16.48],[145.3,-15.9],[145.25,-15.47],[144.5,-14.17],[143.9,-14.4],[143.6,-13.6],[143.5,-12.8],[143.25,-11.95],[142.9,-11.2],[142.53,-10.69],[142.15,-10.9],[141.95,-11.7],[141.85,-12.65],[141.65,-13.3],[141.5,-14.2],[141.45,-15.1],[141.4,-15.9],[141,-16.8],[140.85,-17.45],[140.2,-17.7],[139.55,-17.6],[139,-17.2],[138.5,-16.85]]],
+    NSW: [[[141,-29],[141,-34],[142.15,-34.2],[142.75,-34.6],[143.55,-35.35],[144.75,-36.1],[146,-35.95],[146.9,-36.08],[147.9,-36.1],[148.2,-36.8],[149.98,-37.5],[149.9,-37.07],[150.13,-36.2],[150.2,-35.7],[150.75,-35.1],[150.85,-34.67],[150.9,-34.42],[151.3,-33.85],[151.45,-33.4],[151.8,-32.93],[152.2,-32.7],[152.55,-32.18],[152.92,-31.43],[153.15,-30.3],[153.37,-29.43],[153.64,-28.64],[153.55,-28.17],[152.5,-28.3],[152,-28.65],[151.2,-28.85],[150.3,-28.55],[148.95,-29]]],
+    VIC: [[[141,-34],[142.15,-34.2],[142.75,-34.6],[143.55,-35.35],[144.75,-36.1],[146,-35.95],[146.9,-36.08],[147.9,-36.1],[148.2,-36.8],[149.98,-37.5],[149.5,-37.75],[148.75,-37.8],[147.98,-37.88],[147.3,-38.25],[146.6,-38.7],[146.38,-39.13],[145.85,-38.65],[145.25,-38.5],[144.65,-38.3],[144.33,-38.33],[143.98,-38.55],[143.51,-38.86],[142.99,-38.62],[142.48,-38.4],[141.6,-38.35],[141.4,-38.38],[140.97,-38.06]]],
+    TAS: [[[144.7,-40.68],[145.3,-40.85],[146.1,-41.15],[146.6,-41.05],[147.4,-40.95],[147.97,-40.75],[148.35,-41],[148.3,-41.32],[148.3,-41.87],[148.3,-42.2],[148,-42.65],[147.95,-43.2],[147.3,-43.1],[146.83,-43.64],[145.95,-43.57],[145.9,-43.25],[145.5,-42.75],[145.2,-42.2],[144.95,-41.7],[144.75,-41.4],[144.67,-41.05]]],
+    ACT: [[[149.1,-35.12],[149.4,-35.32],[149.2,-35.55],[149.05,-35.92],[148.8,-35.6],[148.95,-35.3]]],
+  };
+  const STATE_NAMES = { WA: "Western Australia", NT: "Northern Territory", SA: "South Australia", QLD: "Queensland",
+    NSW: "New South Wales", VIC: "Victoria", TAS: "Tasmania", ACT: "Australian Capital Territory" };
+  const LABELS = { WA: [121.8, -25.2], NT: [133.5, -19.8], SA: [135.2, -29.2], QLD: [144.6, -22.4], NSW: [146.4, -32.1], VIC: [139.6, -40.0], TAS: [146.6, -42.05] };
+  // Victoria is too small for its label next to the store dots, so it sits offshore with a leader line.
+  const LEADERS = { VIC: [[141.2, -39.25], [142.6, -37.4]] };
+  const CITIES = { Sydney: [151.21, -33.87], Melbourne: [144.96, -37.81], Geelong: [144.36, -38.15], Brisbane: [153.03, -27.47],
+    "Gold Coast": [153.4, -28.0], Perth: [115.86, -31.95], Adelaide: [138.6, -34.93] };
+
+  function renderMap() {
+    const box = document.getElementById("map");
+    const W = widthOf(box), pad = 6;
+    const lon0 = 112.8, lon1 = 154.0, lat0 = -10.2, lat1 = -43.9, c = Math.cos(27 * Math.PI / 180);
+    const k = (W - 2 * pad) / ((lon1 - lon0) * c);
+    const H = Math.round((lat0 - lat1) * k + 2 * pad);
+    const P = ([lon, lat]) => [pad + (lon - lon0) * c * k, pad + (lat0 - lat) * k];
+    const svg = svgFor(box, W, H, "Map of Australia shaded by revenue per state, with dots at store locations");
+    const st = D[period].state, total = D[period].kpi.revenue;
+    const by = Object.fromEntries(st.map(s => [s.name, s]));
+    const lo = Math.min(...st.map(s => s.revenue)), hi = Math.max(...st.map(s => s.revenue));
+    const seq = SEQ[mode()];
+    const fillOf = s => (s ? ramp(seq, hi === lo ? 1 : (s.revenue - lo) / (hi - lo)) : NONE[mode()]);
+    const fills = {};
+    for (const [name, rings] of Object.entries(GEO)) {
+      const s = by[name];
+      fills[name] = fillOf(s);
+      const d = rings.map(r => "M" + r.map(p => P(p).map(v => v.toFixed(1)).join(",")).join("L") + "Z").join("");
+      const path = el("path", { d, class: "state", fill: fills[name] }, svg);
+      onHover(path, () => s
+        ? `<b>${STATE_NAMES[name]}</b>Revenue ${full(s.revenue)} (${(s.revenue / total * 100).toFixed(0)}% of total)<br>Profit margin ${s.margin}%<br>${s.stores} store${s.stores > 1 ? "s" : ""}`
+        : `<b>${STATE_NAMES[name]}</b>No stores`);
+    }
+    const compact = W < 430;
+    for (const [name, pos] of Object.entries(LABELS)) {
+      const s = by[name], [lx, ly] = P(pos);
+      if (LEADERS[name]) {
+        const [a, b] = LEADERS[name].map(P);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: "baseline" }, svg);
+      }
+      const color = LEADERS[name] ? "var(--ink)" : s ? inkOn(fills[name]) : "var(--ink-2)";
+      const t = el("text", { x: lx, y: ly, "text-anchor": "middle" }, svg);
+      t.style.fill = color;
+      const a = el("tspan", { x: lx, class: "lbl-strong" }, t, name);
+      a.style.fill = color;
+      if (name === "TAS") continue;
+      const b = el("tspan", { x: lx, dy: 16 }, t, s ? (compact ? `${Math.round(s.revenue / total * 100)}%` : `${money(s.revenue)} · ${Math.round(s.revenue / total * 100)}%`) : "No stores");
+      b.style.fill = color;
+    }
+    const groups = {};
+    D[period].stores.forEach(s => { (groups[s.city] = groups[s.city] || []).push(s); });
+    Object.entries(groups).sort((a, b) => b[1].length - a[1].length).forEach(([city, list]) => {
+      if (!CITIES[city]) return;
+      const [cx, cy] = P(CITIES[city]);
+      const dot = el("circle", { cx, cy, r: 3.5 + 1.5 * list.length, class: "store-dot" }, svg);
+      onHover(dot, () => `<b>${city} · ${list.length} store${list.length > 1 ? "s" : ""}</b>` +
+        list.map(s => `${s.name}: ${full(s.revenue)}`).join("<br>"));
+    });
+    document.getElementById("map-grad").style.background = `linear-gradient(to right, ${seq.join(",")})`;
+    document.getElementById("map-none").style.background = NONE[mode()];
+  }
+
+  // ---------- Store league table ----------
   function renderStores() {
-    const rows = D[period].stores;
+    const rows = D[period].stores, total = D[period].kpi.revenue, max = rows[0].revenue;
     document.getElementById("stores").innerHTML =
-      "<thead><tr><th>Store</th><th>State</th><th>Revenue</th><th>Profit</th><th>Margin</th></tr></thead><tbody>" +
-      rows.map(r => `<tr><td>${r.name}</td><td>${r.state}</td><td>${full(r.revenue)}</td>` +
-        `<td>${full(r.profit)}</td><td>${r.margin.toFixed(1)}%</td></tr>`).join("") + "</tbody>";
+      `<thead><tr><th class="l">#</th><th class="l">Store</th><th class="l">State</th><th>Revenue</th><th>Margin</th><th>Share</th></tr></thead><tbody>` +
+      rows.map((r, i) => `<tr><td class="rank">${i + 1}</td><td class="l">${r.name}</td><td class="l">${r.state}</td>` +
+        `<td><span class="dbar" aria-hidden="true"><span style="width:${(r.revenue / max * 100).toFixed(1)}%"></span></span><span class="numw">${full(r.revenue)}</span></td>` +
+        `<td>${r.margin.toFixed(1)}%</td><td>${(r.revenue / total * 100).toFixed(1)}%</td></tr>`).join("") + "</tbody>";
   }
 
-  // ---------- Insights (computed from the full period) ----------
-  function renderInsights() {
-    const A = D.All, k = A.kpi;
-    const dec = A.monthly.filter(r => r.month.endsWith("-12")).reduce((s, r) => s + r.revenue, 0) / 2;
-    const avg = k.revenue / A.monthly.length;
-    const elec = A.category.find(c => c.name === "Electronics");
-    const top = A.products[0];
-    const nswVic = A.state.filter(s => s.name === "NSW" || s.name === "VIC").reduce((s, r) => s + r.revenue, 0);
-    const d0 = A.discount[0], d30 = A.discount[A.discount.length - 1];
-    const yoy = (D["2025"].kpi.revenue - D["2024"].kpi.revenue) / D["2024"].kpi.revenue * 100;
-    const items = [
-      `<b>Christmas drives the year.</b> December averages ${money(dec)}, ${(dec / avg).toFixed(1)}× a typical month. Stock and staffing plans should start in October.`,
-      `<b>Electronics is the biggest but least profitable category.</b> It brings ${(elec.revenue / k.revenue * 100).toFixed(0)}% of revenue at a ${elec.margin}% margin, against ${k.margin}% overall. The ${top.name} alone is ${(top.revenue / k.revenue * 100).toFixed(0)}% of all revenue.`,
-      `<b>Discounts don't pay for themselves.</b> A 30% discount sells ${((d30.units / d0.units - 1) * 100).toFixed(0)}% more units per order line, but profit per line falls ${((1 - d30.profit / d0.profit) * 100).toFixed(0)}% (from $${d0.profit.toFixed(0)} to $${d30.profit.toFixed(0)}).`,
-      `<b>NSW and Victoria carry the business</b> with ${(nswVic / k.revenue * 100).toFixed(0)}% of revenue from 6 of the 12 stores.`,
-      `<b>Revenue was ${yoy >= 0 ? "up" : "down"} ${Math.abs(yoy).toFixed(1)}% in 2025</b> while margin held at ${D["2025"].kpi.margin}%, so the business needs volume growth rather than cost cutting.`,
-    ];
-    document.getElementById("insights").innerHTML = items.map(t => `<li>${t}</li>`).join("");
+  // ---------- Seasonality heatmap ----------
+  function renderHeat() {
+    const P = DIV[mode()], rows = D[period].cat_month, cats = D[period].category.map(c => c.name);
+    const scale = Math.log(2.2);
+    const colour = idx => { const t = Math.max(-1, Math.min(1, Math.log(idx) / scale)); return t >= 0 ? mix(P.mid, P.pos, t) : mix(P.mid, P.neg, -t); };
+    let html = `<thead><tr><th></th>${MONTHS.map(mo => `<th scope="col">${mo}</th>`).join("")}</tr></thead><tbody>`;
+    cats.forEach(cat => {
+      const vals = MONTHS.map((_, i) => (rows.find(r => r.category === cat && r.mo === i + 1) || { revenue: 0 }).revenue);
+      const avg = vals.reduce((a, b) => a + b, 0) / 12;
+      html += `<tr><th scope="row">${cat}</th>` + vals.map((v, i) => {
+        const idx = v / avg, bg = colour(idx);
+        return `<td style="background:${bg};color:${inkOn(bg)}" data-c="${cat}" data-m="${i}" data-v="${v}" data-x="${idx.toFixed(2)}">${idx.toFixed(1)}×</td>`;
+      }).join("") + "</tr>";
+    });
+    const table = document.getElementById("heat");
+    table.innerHTML = html + "</tbody>";
+    table.onmousemove = ev => {
+      const td = ev.target.closest("td[data-c]");
+      if (!td) return hideTip();
+      showTip(`<b>${td.dataset.c} · ${MONTHS[+td.dataset.m]}</b>${period === "All" ? "Revenue (both years)" : "Revenue"} ${full(+td.dataset.v)}<br>${td.dataset.x}× the category's average month`, ev);
+    };
+    table.onmouseleave = hideTip;
+    document.getElementById("heat-grad").style.background =
+      `linear-gradient(to right, ${P.neg}, ${mix(P.mid, P.neg, 0.5)}, ${P.mid}, ${mix(P.mid, P.pos, 0.5)}, ${P.pos})`;
   }
 
+  // ---------- Horizontal bars ----------
+  function renderHBars(id, rows, opts) {
+    const box = document.getElementById(id);
+    const W = widthOf(box), bh = opts.bh || 22, gap = opts.gap || 10, m = { t: 2, r: opts.right, b: 2, l: opts.left };
+    const H = m.t + m.b + rows.length * (bh + gap) - gap;
+    const svg = svgFor(box, W, H, opts.label);
+    const max = Math.max(...rows.map(r => r.revenue)), iw = W - m.l - m.r;
+    rows.forEach((r, i) => {
+      const y = m.t + i * (bh + gap), w = Math.max(2, r.revenue / max * iw);
+      el("text", { x: m.l - 10, y: y + bh / 2 + 4, "text-anchor": "end" }, svg, r.name);
+      el("path", { d: hbar(m.l, y, w, bh), class: "bar" }, svg);
+      el("text", { x: m.l + w + 8, y: y + bh / 2 + 4, class: "val" }, svg, opts.value(r));
+      onHover(el("rect", { x: 0, y: y - gap / 2, width: W, height: bh + gap, class: "hit" }, svg), () => opts.tip(r));
+    });
+    el("line", { x1: m.l, x2: m.l, y1: 0, y2: H, class: "baseline" }, svg);
+  }
+
+  // ---------- Vertical bars ----------
+  function renderVBars(id, rows, opts) {
+    const box = document.getElementById(id);
+    const W = widthOf(box), H = opts.height, m = { t: 22, r: 4, b: 26, l: 4 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const svg = svgFor(box, W, H, opts.label);
+    const max = Math.max(...rows.map(opts.get)) * 1.05;
+    const y = v => m.t + ih - v / max * ih;
+    const slot = iw / rows.length, bw = Math.min(opts.maxBar || 56, slot * 0.62);
+    rows.forEach((r, i) => {
+      const cx = m.l + slot * i + slot / 2, v = opts.get(r), top = y(v);
+      el("path", { d: vbar(cx - bw / 2, top, bw, m.t + ih - top), class: "bar" + (opts.cls ? " " + opts.cls(r) : "") }, svg);
+      el("text", { x: cx, y: top - 6, "text-anchor": "middle", class: "val" }, svg, opts.value(r));
+      el("text", { x: cx, y: H - 7, "text-anchor": "middle" }, svg, opts.x(r));
+      onHover(el("rect", { x: cx - slot / 2, y: m.t, width: slot, height: ih + m.b, class: "hit" }, svg), () => opts.tip(r));
+    });
+    el("line", { x1: m.l, x2: W - m.r, y1: m.t + ih, y2: m.t + ih, class: "baseline" }, svg);
+  }
+
+  function renderDiscount() {
+    const rows = D[period].discount;
+    const lab = r => (r.pct === 0 ? "None" : r.pct + "% off");
+    const tipOf = r => `<b>${r.pct === 0 ? "No discount" : r.pct + "% discount"}</b>${num(r.lines)} order lines<br>` +
+      `Avg ${r.units.toFixed(2)} units per line<br>Avg profit $${r.profit.toFixed(2)} per line<br>Margin ${r.margin}%`;
+    renderVBars("disc-units", rows, { height: 150, get: r => r.units, value: r => r.units.toFixed(2), x: lab, tip: tipOf, label: "Units per order line by discount" });
+    renderVBars("disc-profit", rows, { height: 150, get: r => r.profit, value: r => "$" + r.profit.toFixed(0), x: lab, tip: tipOf, label: "Profit per order line by discount" });
+    const d0 = rows[0], d30 = rows[rows.length - 1];
+    document.getElementById("disc-note").textContent =
+      `At 30% off, each order line sells ${Math.round((d30.units / d0.units - 1) * 100)}% more units but earns ${Math.round((1 - d30.profit / d0.profit) * 100)}% less profit.`;
+  }
+
+  function renderWeekday() {
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    const rows = order.map(d => D[period].weekday.find(r => r.dow === d));
+    renderVBars("weekday", rows, {
+      height: 210, get: r => r.revenue_per_day, value: r => moneyK(r.revenue_per_day), x: r => DAYS[r.dow],
+      cls: r => (r.dow === 0 || r.dow === 6 ? "" : "mid"), maxBar: 44,
+      tip: r => `<b>${DAYS[r.dow]}</b>Average revenue ${full(r.revenue_per_day)} per day`, label: "Average revenue per day by weekday" });
+    const wd = rows.filter(r => r.dow >= 1 && r.dow <= 5), we = rows.filter(r => r.dow === 0 || r.dow === 6);
+    const avg = a => a.reduce((s, r) => s + r.revenue_per_day, 0) / a.length;
+    document.getElementById("dow-note").textContent =
+      `Weekends (darker bars) average ${moneyK(avg(we))} a day, ${Math.round((avg(we) / avg(wd) - 1) * 100)}% more than weekdays (${moneyK(avg(wd))}).`;
+  }
+
+  // ---------- render all ----------
   function render() {
-    const k = D[period].kpi;
     renderKpis();
     renderTrend();
-    renderHBars("category", D[period].category, r => r.margin.toFixed(1) + "%",
-      r => `<b>${r.name}</b>Revenue ${full(r.revenue)}<br>Margin ${r.margin}%`, 90);
-    renderHBars("state", D[period].state, r => (r.revenue / k.revenue * 100).toFixed(0) + "%",
-      r => `<b>${r.name}</b>Revenue ${full(r.revenue)}<br>Margin ${r.margin}%`, 50);
-    renderHBars("products", D[period].products, r => money(r.revenue),
-      r => `<b>${r.name}</b>${r.category}<br>Revenue ${full(r.revenue)}<br>${num(r.units)} units`, 130);
-    renderDiscount();
+    renderMap();
     renderStores();
+    renderHeat();
+    renderHBars("category", D[period].category, {
+      left: 92, right: 104, bh: 30, gap: 14, label: "Revenue by category",
+      value: r => `${money(r.revenue)} · ${r.margin.toFixed(1)}%`,
+      tip: r => `<b>${r.name}</b>Revenue ${full(r.revenue)}<br>Profit ${full(r.profit)}<br>Margin ${r.margin}%` });
+    renderWeekday();
+    renderHBars("products", D[period].products, {
+      left: 128, right: 56, label: "Top 10 products by revenue",
+      value: r => money(r.revenue),
+      tip: r => `<b>${r.name}</b>${r.category}<br>Revenue ${full(r.revenue)}<br>${num(r.units)} units · margin ${r.margin}%` });
+    renderDiscount();
   }
 
   const seg = document.getElementById("period");
-  ["All", ...Object.keys(D).filter(p => p !== "All").sort()].forEach(p => {
+  ["All", ...YEARS].forEach(p => {
     const b = document.createElement("button");
-    b.type = "button"; b.textContent = p === "All" ? "Both years" : p;
-    b.setAttribute("aria-pressed", p === period);
+    b.type = "button";
+    b.textContent = p === "All" ? "Both years" : p;
+    b.setAttribute("aria-pressed", String(p === period));
     b.addEventListener("click", () => {
       period = p;
-      seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+      seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
       render();
     });
     seg.appendChild(b);
   });
+
   renderInsights();
   render();
+  let lastW = innerWidth, timer;
+  addEventListener("resize", () => {
+    if (innerWidth === lastW) return;
+    lastW = innerWidth; clearTimeout(timer); timer = setTimeout(render, 120);
+  });
+  mq.addEventListener("change", render);
 })();
 </script>
 </body>

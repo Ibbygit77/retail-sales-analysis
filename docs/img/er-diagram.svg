@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 412" width="900" height="412" role="img" aria-labelledby="t d">
+  <title id="t">Database design (entity relationship diagram)</title>
+  <desc id="d">Three tables. stores (store_id primary key, store_name, city, state) and products (product_id primary key, product_name, category, unit_cost, unit_price) each have a one-to-many relationship with orders (order_id primary key, order_date, store_id foreign key, product_id foreign key, quantity, discount). All three tables feed a SQL view called sales that calculates revenue and profit.</desc>
+  <style>
+    .bg { fill: #f9f9f7; }
+    .box { fill: #ffffff; stroke: #c3c2b7; stroke-width: 1; }
+    .hdr { fill: #2a78d6; }
+    .hdr-t { fill: #ffffff; font: 600 15px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .row { stroke: #e1e0d9; stroke-width: 1; }
+    .col { fill: #0b0b0b; font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .type { fill: #898781; font: 12px ui-monospace, "Cascadia Mono", Consolas, monospace; }
+    .key { fill: #eaf2fd; stroke: #2a78d6; stroke-width: 1; }
+    .key-t { fill: #1c5cab; font: 600 10px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .rel { fill: none; stroke: #52514e; stroke-width: 1.6; }
+    .open { fill: #ffffff; stroke: #52514e; stroke-width: 1.6; }
+    .flow { fill: none; stroke: #898781; stroke-width: 1.4; stroke-dasharray: 5 4; }
+    .head { fill: #898781; }
+    .view { fill: #ffffff; stroke: #2a78d6; stroke-width: 1.4; stroke-dasharray: 6 4; }
+    .view-t { fill: #0b0b0b; font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .muted { fill: #52514e; font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #121211; }
+      .box, .view, .open { fill: #1a1a19; }
+      .box { stroke: #4a4a46; }
+      .hdr { fill: #256abf; }
+      .row { stroke: #2c2c2a; }
+      .col, .view-t { fill: #f0efec; }
+      .key { fill: #16304f; stroke: #5598e7; }
+      .key-t { fill: #9ec5f4; }
+      .rel { stroke: #c3c2b7; }
+      .open { stroke: #c3c2b7; }
+      .view { stroke: #5598e7; }
+      .muted { fill: #c3c2b7; }
+    }
+  </style>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" class="head"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="900" height="412" rx="16"/>
+
+  <!-- flows into the view (drawn first so boxes sit on top) -->
+  <path class="flow" d="M145,188 V331 H333" marker-end="url(#arr)"/>
+  <path class="flow" d="M755,216 V331 H567" marker-end="url(#arr)"/>
+  <path class="flow" d="M450,244 V290" marker-end="url(#arr)"/>
+
+  <!-- relationships -->
+  <path class="rel" d="M260,90 H297 V146 H335"/>
+  <line class="rel" x1="268" y1="83" x2="268" y2="97"/>
+  <line class="rel" x1="274" y1="83" x2="274" y2="97"/>
+  <line class="rel" x1="321" y1="146" x2="335" y2="139"/>
+  <line class="rel" x1="321" y1="146" x2="335" y2="153"/>
+  <circle class="open" cx="315" cy="146" r="4"/>
+
+  <path class="rel" d="M640,90 H603 V174 H565"/>
+  <line class="rel" x1="632" y1="83" x2="632" y2="97"/>
+  <line class="rel" x1="626" y1="83" x2="626" y2="97"/>
+  <line class="rel" x1="579" y1="174" x2="565" y2="167"/>
+  <line class="rel" x1="579" y1="174" x2="565" y2="181"/>
+  <circle class="open" cx="585" cy="174" r="4"/>
+
+  <!-- stores -->
+  <g transform="translate(30,40)">
+    <rect class="box" width="230" height="148" rx="10"/>
+    <path class="hdr" d="M0,10 a10,10 0 0 1 10,-10 h210 a10,10 0 0 1 10,10 v26 h-230 z"/>
+    <text class="hdr-t" x="14" y="24">stores</text>
+    <line class="row" x1="0" y1="64" x2="230" y2="64"/>
+    <line class="row" x1="0" y1="92" x2="230" y2="92"/>
+    <line class="row" x1="0" y1="120" x2="230" y2="120"/>
+    <rect class="key" x="12" y="42" width="26" height="16" rx="4"/><text class="key-t" x="25" y="54" text-anchor="middle">PK</text>
+    <text class="col" x="46" y="55">store_id</text><text class="type" x="216" y="55" text-anchor="end">INTEGER</text>
+    <text class="col" x="46" y="83">store_name</text><text class="type" x="216" y="83" text-anchor="end">TEXT</text>
+    <text class="col" x="46" y="111">city</text><text class="type" x="216" y="111" text-anchor="end">TEXT</text>
+    <text class="col" x="46" y="139">state</text><text class="type" x="216" y="139" text-anchor="end">TEXT</text>
+  </g>
+
+  <!-- orders -->
+  <g transform="translate(335,40)">
+    <rect class="box" width="230" height="204" rx="10"/>
+    <path class="hdr" d="M0,10 a10,10 0 0 1 10,-10 h210 a10,10 0 0 1 10,10 v26 h-230 z"/>
+    <text class="hdr-t" x="14" y="24">orders</text>
+    <line class="row" x1="0" y1="64" x2="230" y2="64"/>
+    <line class="row" x1="0" y1="92" x2="230" y2="92"/>
+    <line class="row" x1="0" y1="120" x2="230" y2="120"/>
+    <line class="row" x1="0" y1="148" x2="230" y2="148"/>
+    <line class="row" x1="0" y1="176" x2="230" y2="176"/>
+    <rect class="key" x="12" y="42" width="26" height="16" rx="4"/><text class="key-t" x="25" y="54" text-anchor="middle">PK</text>
+    <text class="col" x="46" y="55">order_id</text><text class="type" x="216" y="55" text-anchor="end">INTEGER</text>
+    <text class="col" x="46" y="83">order_date</text><text class="type" x="216" y="83" text-anchor="end">DATE</text>
+    <rect class="key" x="12" y="98" width="26" height="16" rx="4"/><text class="key-t" x="25" y="110" text-anchor="middle">FK</text>
+    <text class="col" x="46" y="111">store_id</text><text class="type" x="216" y="111" text-anchor="end">INTEGER</text>
+    <rect class="key" x="12" y="126" width="26" height="16" rx="4"/><text class="key-t" x="25" y="138" text-anchor="middle">FK</text>
+    <text class="col" x="46" y="139">product_id</text><text class="type" x="216" y="139" text-anchor="end">INTEGER</text>
+    <text class="col" x="46" y="167">quantity</text><text class="type" x="216" y="167" text-anchor="end">INTEGER</text>
+    <text class="col" x="46" y="195">discount</text><text class="type" x="216" y="195" text-anchor="end">REAL</text>
+  </g>
+
+  <!-- products -->
+  <g transform="translate(640,40)">
+    <rect class="box" width="230" height="176" rx="10"/>
+    <path class="hdr" d="M0,10 a10,10 0 0 1 10,-10 h210 a10,10 0 0 1 10,10 v26 h-230 z"/>
+    <text class="hdr-t" x="14" y="24">products</text>
+    <line class="row" x1="0" y1="64" x2="230" y2="64"/>
+    <line class="row" x1="0" y1="92" x2="230" y2="92"/>
+    <line class="row" x1="0" y1="120" x2="230" y2="120"/>
+    <line class="row" x1="0" y1="148" x2="230" y2="148"/>
+    <rect class="key" x="12" y="42" width="26" height="16" rx="4"/><text class="key-t" x="25" y="54" text-anchor="middle">PK</text>
+    <text class="col" x="46" y="55">product_id</text><text class="type" x="216" y="55" text-anchor="end">INTEGER</text>
+    <text class="col" x="46" y="83">product_name</text><text class="type" x="216" y="83" text-anchor="end">TEXT</text>
+    <text class="col" x="46" y="111">category</text><text class="type" x="216" y="111" text-anchor="end">TEXT</text>
+    <text class="col" x="46" y="139">unit_cost</text><text class="type" x="216" y="139" text-anchor="end">REAL</text>
+    <text class="col" x="46" y="167">unit_price</text><text class="type" x="216" y="167" text-anchor="end">REAL</text>
+  </g>
+
+  <!-- sales view -->
+  <g transform="translate(335,292)">
+    <rect class="view" width="230" height="78" rx="10"/>
+    <text class="view-t" x="115" y="24" text-anchor="middle">sales <tspan class="muted">(SQL view)</tspan></text>
+    <text class="muted" x="115" y="45" text-anchor="middle">Joins all three tables and</text>
+    <text class="muted" x="115" y="63" text-anchor="middle">calculates revenue and profit</text>
+  </g>
+
+  <!-- legend -->
+  <g transform="translate(30,394)">
+    <line class="rel" x1="0" y1="0" x2="26" y2="0"/><line class="rel" x1="18" y1="-6" x2="18" y2="6"/><line class="rel" x1="23" y1="-6" x2="23" y2="6"/>
+    <text class="muted" x="34" y="4">exactly one</text>
+    <line class="rel" x1="124" y1="0" x2="150" y2="0"/><line class="rel" x1="138" y1="0" x2="150" y2="-6"/><line class="rel" x1="138" y1="0" x2="150" y2="6"/><circle class="open" cx="133" cy="0" r="3.5"/>
+    <text class="muted" x="158" y="4">zero or many</text>
+    <line class="flow" x1="258" y1="0" x2="290" y2="0" marker-end="url(#arr)"/>
+    <text class="muted" x="298" y="4">used to build the view</text>
+    <text class="muted" x="480" y="4">PK = primary key · FK = foreign key</text>
+  </g>
+</svg>
